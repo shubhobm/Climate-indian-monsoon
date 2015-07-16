@@ -1,0 +1,89 @@
+> read.table("allmedian.txt")
+                   apply.SSPmat.d..2..mean.
+LATITUDE                          0.2973589
+LONGITUDE                         0.2592408
+ELEVATION                         0.2155074
+TMAX                              0.1724765
+TMIN                              0.2832471
+del_TT_Deg_Celsius                0.2602345
+DMI                               0.2604178
+Nino34                            0.2109615
+u_wind_200                        0.2906263
+u_wind_850                        0.2893215
+v_wind_200                        0.2634133
+v_wind_850                        0.2422298
+full                              0.2757520
+
+
+> summary(mod.final)
+Linear mixed model fit by REML ['lmerMod']
+Formula: 
+log(PRCP + 1) ~ LONGITUDE + ELEVATION + TMAX + del_TT_Deg_Celsius +  
+    DMI + Nino34 + v_wind_200 + v_wind_850 + (1 | year)
+   Data: rainsmall
+
+REML criterion at convergence: 4202.9
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.3372 -0.6290  0.0350  0.6803  5.3344 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ year     (Intercept) 0.3336   0.5776  
+ Residual             1.0177   1.0088  
+Number of obs: 1415, groups:  year, 41
+
+Fixed effects:
+                     Estimate Std. Error t value
+(Intercept)        24.9355196  1.1006822   22.65
+LONGITUDE           0.0595485  0.0058977   10.10
+ELEVATION          -0.0039584  0.0001368  -28.93
+TMAX               -0.0604587  0.0016669  -36.27
+del_TT_Deg_Celsius  0.3614006  0.0327677   11.03
+DMI                 0.0043855  0.0018786    2.33
+Nino34             -0.3283160  0.1343759   -2.44
+v_wind_200         -0.0186181  0.0252643   -0.74
+v_wind_850         -0.1121626  0.0174876   -6.41
+
+Correlation of Fixed Effects:
+            (Intr) LONGIT ELEVAT TMAX   d_TT_D DMI    Nino34 v__200
+LONGITUDE   -0.397                                                 
+ELEVATION   -0.441 -0.015                                          
+TMAX        -0.606 -0.131  0.533                                   
+dl_TT_Dg_Cl  0.789 -0.048 -0.255 -0.265                            
+DMI         -0.158  0.014  0.003 -0.016 -0.036                     
+Nino34       0.115 -0.023 -0.041 -0.044  0.064 -0.299              
+v_wind_200  -0.287  0.363 -0.046 -0.237 -0.395  0.034 -0.073       
+v_wind_850  -0.178 -0.493  0.413  0.188 -0.461  0.012 -0.003  0.011
+
+
+> anova(mod.final)
+Analysis of Variance Table
+                   Df  Sum Sq Mean Sq   F value
+LONGITUDE           1  250.29  250.29  245.9345
+ELEVATION           1  134.93  134.93  132.5850
+TMAX                1 1318.78 1318.78 1295.8465
+del_TT_Deg_Celsius  1  100.42  100.42   98.6779
+DMI                 1    3.18    3.18    3.1291
+Nino34              1    6.45    6.45    6.3359
+v_wind_200          1    0.45    0.45    0.4427
+v_wind_850          1   41.87   41.87   41.1375
+
+
+> r.squaredGLMM(mod.final)
+      R2m       R2c 
+0.5215956 0.6397036 
+
+
+> anova(mod.final, mod.full)
+Data: rainsmall
+Models:
+mod.final: log(PRCP + 1) ~ LONGITUDE + ELEVATION + TMAX + del_TT_Deg_Celsius + 
+mod.final:     DMI + Nino34 + v_wind_200 + v_wind_850 + (1 | year)
+mod.full: log(PRCP + 1) ~ LATITUDE + LONGITUDE + ELEVATION + TMAX + TMIN + 
+mod.full:     del_TT_Deg_Celsius + DMI + Nino34 + u_wind_200 + u_wind_850 + 
+mod.full:     v_wind_200 + v_wind_850 + (1 | year)
+          Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)
+mod.final 11 4155.0 4212.8 -2066.5   4133.0                         
+mod.full  15 4159.7 4238.5 -2064.8   4129.7 3.3091      4     0.5075
