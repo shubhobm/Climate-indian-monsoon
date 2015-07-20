@@ -11,25 +11,10 @@ library(lme4)
 library(MuMIn)
 
 # read in data
-rain = read.csv("../data/rain_1973_2013_test.csv")
-rainsmall = with(rain, data.frame(cbind(PRCP,
-	LATITUDE, LONGITUDE, ELEVATION, TMAX, TMIN,
-	del_TT_Deg_Celsius, DMI, Nino34,
-	Air_200_Temp, Air_600_Temp,
-	u_wind_200, u_wind_600, u_wind_850,
-	v_wind_200, v_wind_600, v_wind_850)))
-
-rainsmall1 = aggregate(PRCP ~ year+STATION_NAME, data=rain, FUN=median)
-rainsmall2 = aggregate(cbind(LATITUDE, LONGITUDE, ELEVATION, TMAX, TMIN,
-	del_TT_Deg_Celsius, DMI, Nino34,
-	u_wind_200, u_wind_850,
-	v_wind_200, v_wind_850) ~ year+STATION_NAME,
-	data=rain, FUN=median)
-rainsmall = cbind(rainsmall1, rainsmall2)
-rainsmall[,4:5] = list(NULL)
-rm(rainsmall1, rainsmall2)
+rainsmall = read.csv("../data/rainsmall.csv")
 
 # check full model
+rainsmall[-(1:3)] = scale(rainsmall[-(1:3)])
 varnames = names(rainsmall)[-(1:3)]
 formula = paste(varnames, collapse="+")
 formula = as.formula(paste("log(PRCP+1) ~", formula, "+ (1|year)"))
@@ -37,13 +22,22 @@ mod.full = lmer(formula, data=rainsmall)
 summary(mod.full)
 anova(mod.full)
 r.squaredGLMM(mod.full)
-beta = as.numeric(coef(mod.full)$year[1,-1])
 
 # bootstrap function
 n = nrow(rainsmall)
-m = ceiling(n^(.7))
+nyr = length(unique(rainsmall$year))
 p = ncol(rainsmall)-3
-nboot = 1e2
+nboot = 1e3
+sdn = n^.2
+sdnyr = nyr^.2
+
+# set up residuals
+y = getME(mod.full, 'y')
+fixed = getME(mod.full, 'X') %*% fixef(mod.full)
+eta = unlist(ranef(mod.full))
+Z = t(as.matrix(getME(mod.full,'Zt')))
+random = Z %*% eta
+r = y - fixed - random
 
 SSPmat = matrix(0, nrow=nboot, ncol=p+1)
 SSPmat.d = SSPmat
@@ -52,23 +46,31 @@ beta.mat = matrix(0, nrow=nboot, ncol=p)
 # loop for full model bootstrap
 # to get bootstrap distribution of parameters
 set.seed(07152015)
+# create progress bar
+pb <- txtProgressBar(min = 0, max = nboot, style = 3)
 for(i in 1:nboot){
-	iind = sample(1:n, m, replace=T)
-	imod = update(mod.full, subset=iind)	
+  iyb = fixed + (Z %*% (rnorm(nyr)*sdnyr*eta) + rnorm(n)*sd*r)/sqrt(1 - p/n)
+	iformula = paste(varnames, collapse="+")
+	iformula = as.formula(paste("iyb ~", iformula, "+ (1|year)"))
+	imod = lmer(iformula, data=rainsmall)
 	beta.mat[i,] = as.numeric(coef(imod)$year[1,-1])
+  setTxtProgressBar(pb, i)
 }
+close(pb)
 SSPmat.d[,p+1] = mdepth.RP(beta.mat, beta.mat)$dep
   
 ## loop to get drop 1 bootstrap estimates
+# create progress bar
+pb <- txtProgressBar(min = 0, max = nboot, style = 3)
 for(i in 1:nboot){
-	iind = sample(1:n, m, replace=T)
+  iyb = fixed + (Z %*% (rnorm(nyr)*sd*eta) + rnorm(n)*sd*r)/sqrt(1 - p/n)
     
 	# loop for all variables
 	for(j in 1:p){
 		# build model
 		jformula = paste(varnames[-j], collapse="+")
-		jformula = as.formula(paste("log(PRCP+1) ~", jformula, "+ (1|year)"))
-		ijmod = lmer(jformula, data=rainsmall, subset=iind)
+		jformula = as.formula(paste("iyb ~", jformula, "+ (1|year)"))
+		ijmod = lmer(jformula, data=rainsmall)
 
 		# extract coef and extend to lengthp by appending 0's
 		ibeta.j = as.numeric(coef(ijmod)$year[1,-1])
@@ -79,19 +81,21 @@ for(i in 1:nboot){
 		#SSPmat.d[i,j] = 1/(1 + t(ibeta.j.full - beta) %*% XtX.inv %*% (ibeta.j.full - beta))
 		SSPmat.d[i,j] = mdepth.RP(ibeta.j.full, beta.mat)$dep
   	}
+  setTxtProgressBar(pb, i)
 }
+close(pb)
 
 t = data.frame(apply(SSPmat.d, 2, mean))
 rownames(t) = c(varnames,"full")
 t
 
-write.table(t, 'allmedian.txt')
+write.table(t, 'allmedianMJOtele.txt')
 
 # parameter distributions
 pairs(beta.mat[,1:8], pch=19, cex=.2)
 
 # final model
-formula = paste(varnames[c(2:4,6:8,11,12)], collapse="+")
+formula = paste(varnames[which(as.numeric(unlist(t)) < t[nrow(t),1])], collapse="+")
 formula = as.formula(paste("log(PRCP+1) ~", formula, "+ (1|year)"))
 mod.final = lmer(formula, data=rainsmall)
 summary(mod.final)
