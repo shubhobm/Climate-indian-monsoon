@@ -38,8 +38,8 @@ r = y - fixed - random
 n = nrow(rainsmall)
 nr = length(eta)
 p = ncol(rainsmall)-3
-sdn = n^(.2)
-sdr = nr^(.2)
+sdn = n^(.1)
+sdr = nr^(.1)
 
 ## loop to get drop 1 bootstrap estimates
 loopfun = function(i){
@@ -96,11 +96,21 @@ system.time(SSPtab <- foreach(i=1:nboot) %dopar% loopfun(i))
 SSPmat.d[,1:p] = matrix(unlist(SSPtab), ncol=p, byrow=T)
 stopCluster(cl)
 
-t = data.frame(cbind(apply(SSPmat.d, 2, mean), apply(SSPmat.d, 2, sd)))
-rownames(t) = c(varnames,"full")
-t
+# get p-values
+pVal = rep(1, p+1)
+for(i in 1:p){
+  pVal[i] = t.test(SSPmat.d[,i], SSPmat.d[,p+1])$p.value
+}
 
-write.table(t, 'wild_sqrtlogn.txt')
+Cn.frame = data.frame(DroppedVar = c(paste("-", names(data.frame(x))[-1]), "<none>"),
+                      Cn = apply(SSPmat.d, 2, mean),
+                      pValue = pVal)
+Cn.frame = Cn.frame[with(Cn.frame, order(Cn)),]
+row.names(Cn.frame) = NULL
+Cn.frame
+
+
+write.table(Cn.frame, 'wild_ntothepoint1.txt')
 
 # parameter distributions
 pairs(beta.mat[,1:5], pch=19, cex=.2)
@@ -113,11 +123,3 @@ summary(mod.final)
 anova(mod.final)
 r.squaredGLMM(mod.final)
 anova(mod.final, mod.full)
-
-# robust lmm
-######## doesn't fucking work
-library(robustlmm)
-rmod.full = rlmer(formula, data=rainsmall)
-summary(mod.full)
-anova(mod.full)
-r.squaredGLMM(mod.full)
