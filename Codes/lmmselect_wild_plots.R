@@ -11,17 +11,18 @@ library(lme4)
 library(MuMIn)
 library(doSNOW)
 library(parallel)
+library(TeachingDemos)
 
 # read in data
-rainsmall = read.csv("../data/rainsmall.csv")
+rainsmall = read.csv("rainsmall.txt")
 
 # check full model
 rainsmall[-(1:3)] = scale(rainsmall[-(1:3)])
 varnames = names(rainsmall)[-(1:3)]
-formula = paste(varnames, collapse="+")
+fixed.full = paste(varnames, collapse="+")
 random_terms = "+ (1|year)"
-formula = as.formula(paste("log(PRCP+1) ~", formula, random_terms))
-mod.full = lmer(formula, data=rainsmall)
+form.full = as.formula(paste("log(PRCP+1) ~", fixed.full, random_terms))
+mod.full = lmer(form.full, data=rainsmall)
 summary(mod.full)
 anova(mod.full)
 r.squaredGLMM(mod.full)
@@ -99,10 +100,10 @@ stopCluster(cl)
 # get p-values
 pVal = rep(1, p+1)
 for(i in 1:p){
-  pVal[i] = t.test(SSPmat.d[,i], SSPmat.d[,p+1])$p.value
+  pVal[i] = t.test(SSPmat.d[,i], SSPmat.d[,p+1], alternative="less")$p.value
 }
 
-Cn.frame = data.frame(DroppedVar = c(paste("-", names(data.frame(x))[-1]), "<none>"),
+Cn.frame = data.frame(DroppedVar = c(paste("-", names(data.frame(getME(mod.full, 'X')))[-1]), "<none>"),
                       Cn = apply(SSPmat.d, 2, mean),
                       pValue = pVal)
 Cn.frame = Cn.frame[with(Cn.frame, order(Cn)),]
@@ -110,12 +111,13 @@ row.names(Cn.frame) = NULL
 Cn.frame
 
 
-write.table(Cn.frame, 'wild_ntothepoint1.txt')
+write.csv(Cn.frame, 'wild_ntothepoint1.csv')
 
 # parameter distributions
 pairs(beta.mat[,1:5], pch=19, cex=.2)
 
 # final model
+txtStart('log_lmmselect_wild.txt')
 noneCn = Cn.frame$Cn[which(Cn.frame$DroppedVar == "<none>")]
 which.final = which(apply(SSPmat.d, 2, mean) < noneCn & pVal < 0.05)
 fixed.final = paste(varnames[which.final], collapse="+")
@@ -125,3 +127,69 @@ summary(mod.final)
 anova(mod.final)
 r.squaredGLMM(mod.final)
 anova(mod.final, mod.full)
+
+## 6-variable model
+form6 = log(PRCP+1)~TMAX+ELEVATION+TempAnomaly+del_TT_Deg_Celsius+v_wind_850+Nino34+(1|year)
+mod6 = lmer(form6, data=rainsmall)
+summary(mod6)
+r.squaredGLMM(mod6)
+txtStop()
+
+# out-of-sample prediction
+# set.seed(07222015)
+# 
+# pred.mat = matrix(0,1e2,2)
+# system.time(for(i in 1:1e2){
+# test = sample(1:n, ceiling(.1*n), replace=F)
+# mod.full.train = update(mod.full, subset=-test)
+# mod.final.train = update(mod.final, subset=-test)
+# 
+# ytest = log(rainsmall$PRCP[test]+1)
+# yhat.full = predict(mod.full.train, newdata=rainsmall[test,])
+# pred.mat[i,1] = mean((ytest - yhat.full)^2)
+# 
+# yhat.final = predict(mod.final.train, newdata=rainsmall[test,])
+# pred.mat[i,2] = mean((ytest - yhat.final)^2)
+# })
+# 
+# exp(apply(pred.mat, 2, median))-1
+# apply(pred.mat, 2, sd)
+
+# future prediction
+testyrs = 2003:2012
+ntest = length(testyrs)
+pred.mat = matrix(0, ncol=2, nrow=ntest)
+
+# which6 = c(3,4,6,8,14,35)
+for (i in 1:ntest){
+iyr = testyrs[i]
+itrain = which(rainsmall$year >= iyr-25 & rainsmall$year < iyr)
+itest = which(rainsmall$year == iyr)
+testX = rainsmall[itest,-c(1:3)]
+
+#mod.full.train = lm(as.formula(paste("log(PRCP+1) ~", fixed.full)), data=rainsmall, subset=itrain)
+#mod.final.train = lm(as.formula(paste("log(PRCP+1) ~", fixed.final)), data=rainsmall, subset=itrain)
+
+mod.full.train = lmer(form.full, data=rainsmall, subset=itrain)
+mod.final.train = lmer(form6, data=rainsmall, subset=itrain)
+
+ytest = log(rainsmall$PRCP[itest]+1)
+yhat.full = as.matrix(cbind(1, testX)) %*% as.numeric(fixef(mod.full.train))
+pred.mat[i,1] = mean((ytest - yhat.full)^2)
+
+yhat.final = as.matrix(cbind(1, testX[,which.final])) %*% as.numeric(fixef(mod.final.train))
+pred.mat[i,2] = mean((ytest - yhat.final)^2)
+}
+
+plot(pred.mat[,1]~testyrs, type="b", ylim=c(0,ceiling(max(pred.mat[,1]))), lwd=2,
+	xlab="year", ylab="MSE of BLUE", main="25 year rolling prediction of next year's median rainfall")
+lines(pred.mat[,2]~testyrs, type="b", lty=2, lwd=2)
+legend("topleft", c("Full model", "Reduced model"), lty=1:2, lwd=2)
+
+plot(density(ytest), xlim=c(-2,10), ylim=c(0,.5), lwd=2,
+	xlab="log(PRCP+1)", ylab="density", main="Year 2012")
+lines(density(yhat.full), col='red', lwd=2)
+lines(density(yhat.final), col='blue', lwd=2)
+legend("topright", c("Truth", "Full model pred", "Reduced model pred"),
+	col=c('black','red','blue'), lty=1, lwd=2)
+
