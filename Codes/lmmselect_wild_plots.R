@@ -15,6 +15,8 @@ library(TeachingDemos)
 
 # read in data
 rainsmall = read.csv("rainsmall.txt")
+long.list = rainsmall$LONGITUDE[1:36]
+lat.list = rainsmall$LATITUDE[1:36]
 
 # check full model
 rainsmall[-(1:3)] = scale(rainsmall[-(1:3)])
@@ -193,3 +195,14 @@ lines(density(yhat.final), col='blue', lwd=2)
 legend("topright", c("Truth", "Full model pred", "Reduced model pred"),
 	col=c('black','red','blue'), lty=1, lwd=2)
 
+# plot on map
+library(maps)
+library(maptools)
+
+r.final = ytest - yhat.final
+India <- map("world", ylim=c(8,38), xlim=c(68,98))
+title("2012")
+points(long.list, lat.list, pch=ifelse(r.final<0, 17, 19),
+	cex=ifelse(abs(r.final)<.5, 1, ifelse(abs(r.final)<1, 2, 2.5)),
+	col=ifelse(r.final>0, "red", "black"))
+legend('topright', c("Positive resid", "negative resid"), pch=c(19,17), col=c("black", "red"))
