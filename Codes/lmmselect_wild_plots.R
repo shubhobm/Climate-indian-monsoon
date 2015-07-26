@@ -11,7 +11,6 @@ library(lme4)
 library(MuMIn)
 library(doSNOW)
 library(parallel)
-library(TeachingDemos)
 
 # read in data
 rainsmall = read.csv("rainsmall.txt")
@@ -117,7 +116,6 @@ write.csv(Cn.frame, 'wild_ntothepoint1.csv')
 pairs(beta.mat[,1:5], pch=19, cex=.2)
 
 # final model
-txtStart('log_lmmselect_wild.txt')
 noneCn = Cn.frame$Cn[which(Cn.frame$DroppedVar == "<none>")]
 which.final = which(apply(SSPmat.d, 2, mean) < noneCn & pVal < 0.05)
 fixed.final = paste(varnames[which.final], collapse="+")
@@ -128,39 +126,31 @@ anova(mod.final)
 r.squaredGLMM(mod.final)
 anova(mod.final, mod.full)
 
-## 6-variable model
-form6 = log(PRCP+1)~TMAX+ELEVATION+TempAnomaly+del_TT_Deg_Celsius+v_wind_850+Nino34+(1|year)
-mod6 = lmer(form6, data=rainsmall)
-summary(mod6)
-r.squaredGLMM(mod6)
-txtStop()
-
 # out-of-sample prediction
-# set.seed(07222015)
-# 
-# pred.mat = matrix(0,1e2,2)
-# system.time(for(i in 1:1e2){
-# test = sample(1:n, ceiling(.1*n), replace=F)
-# mod.full.train = update(mod.full, subset=-test)
-# mod.final.train = update(mod.final, subset=-test)
-# 
-# ytest = log(rainsmall$PRCP[test]+1)
-# yhat.full = predict(mod.full.train, newdata=rainsmall[test,])
-# pred.mat[i,1] = mean((ytest - yhat.full)^2)
-# 
-# yhat.final = predict(mod.final.train, newdata=rainsmall[test,])
-# pred.mat[i,2] = mean((ytest - yhat.final)^2)
-# })
-# 
-# exp(apply(pred.mat, 2, median))-1
-# apply(pred.mat, 2, sd)
+set.seed(07222015)
+
+pred.mat = matrix(0,1e2,2)
+system.time(for(i in 1:1e2){
+test = sample(1:n, ceiling(.1*n), replace=F)
+mod.full.train = update(mod.full, subset=-test)
+mod.final.train = update(mod.final, subset=-test)
+
+ytest = log(rainsmall$PRCP[test]+1)
+yhat.full = predict(mod.full.train, newdata=rainsmall[test,])
+pred.mat[i,1] = mean((ytest - yhat.full)^2)
+
+yhat.final = predict(mod.final.train, newdata=rainsmall[test,])
+pred.mat[i,2] = mean((ytest - yhat.final)^2)
+})
+
+exp(apply(pred.mat, 2, median))-1
+apply(pred.mat, 2, sd)
 
 # future prediction
 testyrs = 2003:2012
 ntest = length(testyrs)
 pred.mat = matrix(0, ncol=2, nrow=ntest)
 
-# which6 = c(3,4,6,8,14,35)
 for (i in 1:ntest){
 iyr = testyrs[i]
 itrain = which(rainsmall$year >= iyr-25 & rainsmall$year < iyr)
@@ -171,7 +161,7 @@ testX = rainsmall[itest,-c(1:3)]
 #mod.final.train = lm(as.formula(paste("log(PRCP+1) ~", fixed.final)), data=rainsmall, subset=itrain)
 
 mod.full.train = lmer(form.full, data=rainsmall, subset=itrain)
-mod.final.train = lmer(form6, data=rainsmall, subset=itrain)
+mod.final.train = lmer(form.final, data=rainsmall, subset=itrain)
 
 ytest = log(rainsmall$PRCP[itest]+1)
 yhat.full = as.matrix(cbind(1, testX)) %*% as.numeric(fixef(mod.full.train))
