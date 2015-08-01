@@ -1,0 +1,24 @@
+\begin{thebibliography}{1}
+
+\bibitem{Dietz2014}
+L.~R. Dietz and S.~Chatterjee, ``Logit-normal mixed model for {I}ndian monsoon
+  precipitation,'' {\em Nonlin. Processes Geophys.}, vol.~21, pp.~939--953, sep
+  2014.
+
+\bibitem{Dietz2015Chapter}
+L.~R. Dietz and S.~Chatterjee, ``{Investigation of Precipitation Thresholds in
+  the Indian Monsoon Using Logit-Normal Mixed Models},'' in {\em Machine
+  Learning and Data Mining Approaches to Climate Science: Proceedings of the
+  Fourth International Workshop on Climate Informatics} (V.~Lakshmanan,
+  E.~Gilleland, A.~McGovern, and M.~Tingley, eds.), pp.~239--246, Springer,
+  2015.
+
+\bibitem{ZuoSerfling00c}
+Y.~Zuo and R.~Serfling, ``General notions of statistical depth function,'' {\em
+  Ann. of Statist.}, vol.~28-2, pp.~461--482, 2000.
+
+\bibitem{MajumdarMS}
+S.~Majumdar and S.~Chatterjee, ``A model selection criterion for regression
+  estimators based on data depth.'' Working paper, 2015+.
+
+\end{thebibliography}

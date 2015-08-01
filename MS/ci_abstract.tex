@@ -4,146 +4,93 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{fancyhdr}
+\usepackage{mycommands,url,cite,hyperref,caption,subfigure}
 \include{graphicsx}
 
 \pagestyle{fancy}
 %\renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
 \rhead{\includegraphics[height=0.6in]{CITransparentwithTitleForWeb.png}}
-\fancyhead[LO]{\sc Creating Post-Event Storm Tracks \ldots} % shorter form of title to fit in space
-\fancyhead[LE]{\sc Lakshmanan, Herzog, Kingfield} % author list or et al., to fit in space
+\fancyhead[LO]{\sc Selecting Predictors of Indian Monsoon} % shorter form of title to fit in space
+\fancyhead[LE]{\sc Majumdar, Dietz, Chatterjee} % author list or et al., to fit in space
 \chead{}
 \cfoot{}
 
 \begin{document}
-\title{\vspace{0.2in}\sc Creating Post-Event Storm Tracks for Severe Weather Climatologies}
-\author{Valliappa Lakshmanan$^{1,2}$\thanks{Corresponding author: V Lakshmanan, University of Oklahoma, Norman OK lakshman@ou.edu $^1$ Cooperative Institute of Mesoscale Meteorological Studies, University of Oklahoma $^2$ National Severe Storms Laboratory, Norman, OK}, Benjamin Herzog$^{1,2}$, Darrel Kingfield$^{1,2}$}
+\title{\vspace{0.2in}\sc Identifying Driving Factors Behind Indian Monsoon Precipitation using Model Selection based on Data Depth}
+\author{Subhabrata Majumdar$^1$\thanks{Corresponding author: S. Majumdar, University of Minnesota Twin Cities, Minneapolis MN; majum010@umn.edu$^1$}, Lindsey Dietz$^1$, Snigdhansu Chatterjee$^1$}
 
 \maketitle
 \thispagestyle{fancy}
 
 \begin{abstract}
-Commonly employed storm tracking algorithms do not use information on the
-subsequent positions of a storm because it is not available at
-the time that associations between frames are carried out,
-but post-event analysis is
-not similarly constrained. Therefore, it should be possible to
-obtain better tracks for post-event analysis than what a real-time
-algorithm is capable of. In this paper, we describe a statistical
-procedure to determine storm tracks from a set of identified storm cells
-over time. We find that this procedure results in fewer, longer-lived tracks
-at all scales.
+We introduce a novel one-step model selection technique for general regression estimators, and implement it in a linear mixed model setup to identify important predictors affecting Indian Monsoon precipitation. Under very general assumptions, this technique correctly identifies the set of non-zero values in the true coefficient (of length $p$) by comparing only $p+1$ models. Here we use wild bootstrap to estimate the selection criterion. Mixed models built on predictors selected by our procedure are more stable and accurate than full models across testing years in predicting median daily rainfall at a station.
 \end{abstract}
 
 \section{Motivation}
-Even though storm tracking methods such as the Storm Cell Identification
-and Tracking Algorithm (SCIT~\cite{scit}), Thunderstorm Identification,
-Tracking and Nowcasting (TITAN~\cite{titan}) and Segmentation-Motion
-Estimation (w2segmotion \cite{atmosresearch,stormattr}) are constrained
-to work in a purely causal fashion, these algorithms have been widely
-employed by the meteorological research community to carry out case
-studies and formulate spatio-temporal relationships, for example by~\cite{scituse1,scituse3,segmotionuse1,titanuse1}.
 
-Using a storm tracking algorithm that is constrained to work in real-time
-to carry out post-event analysis is sub-optimal. There is more information
-(about which cells persist and the direction in which they move)
-that is available if the entire set of storm
-cell identifications over the complete dataset is used to determine
-thunderstorm tracks. In this paper, we describe a way of clustering
-a set of storm cell identifications over time into trajectories where
-a trajectory is the line (or curve) that best fits the
-position of an individual storm cell over time.
+Obtaining a meaningful statistical model of Indian summer monsoon precipitation is challenging from both physical and statistical perspective due to its erratic nature.  This is an extremely important problem because monsoon precipitation is the major source of water for the mostly seasonal agricultural practice in the subcontinent. Dietz and Chatterjee show in\cite{Dietz2014} and \cite{Dietz2015Chapter} that in addition to several covariates and climate variables (found in references cited therein) there is a need to include random effects in modeling to quantify the uncertainty in the process.
 
-This work was carried out in order to improve spatiotemporal relationships
-between radar-derived storm characteristics and the subsequent onset of
-specific weather hazards such as cloud-to-ground lightning, hail and
-tornadoes~\cite{phi}.
-Such hazard probabilities can be derived from storm attributes
-using the method of~\cite{stormattr} on a multi-year reanalysis dataset created
-as described in~\cite{hailclimo}, but the reliability and skill of
-these probabilities is limited by the quality of the storm tracks used
-to train the data mining algorithms.
+Statistical model selection may guide the choice of covariates so that only relevant ones are included, thus improving both accuracy and precision of prediction. However, unlike traditional scenarios like linear regression, the problem involves both fixed and random effects, and potentially heteroskedastic error structure. Also, linearity or other regression assumptions are not guaranteed to hold and are hard to verify with in the current context. Consequently, traditional likelihood-based methods may suffer from lack of robustness, while ad hoc techniques like randomization imply strong hidden assumptions which are unlikely to hold with current data. Here we tackle all these issues by selecting covariates utilizing a general model selection criterion that depends on the behavior of coefficient estimates in the parameter space, and demonstrate efficacy of the resulting model in out-of-time predictions.
 
-\section{Method}
-Given a cluster of storm cells $(x_t,y_t)$ at multiple times,
-the best constant-speed straight-line trajectory fit $u,v$
-for the cluster is the best fit slope of the line that connects the
-points in the cluster.
-\cite{theil} introduced a non-parametric, rank-invariant method for
-obtaining the best-fit slope in a dataset whereby one computes
-the median of the slopes of every pair of sample points.
-\cite{sen} modified the definition so that the median is computed
-only of points at different times ($t_2 \ne t_1$).
-Once the median of the slopes ($u$ and $v$) are obtained, and
-assuming that $t_0$ is the time of the earliest storm cell in the cluster,
-the value of $x_0$ can be obtained by computing the median value of
-$x(t) - u(t-t_0)$ over all the storm cells in the cluster.
-This value was shown by~\cite{sen} to be the value that makes the
-Kendall rank correlation coefficient~\cite{kendalltau} between
-the actual storm cell locations and the fitted values on the line
-approximately zero.
+\section{Methods}
+%\subsection{Robust PCA based on data depth}
+%The depth of a point in multivariate space, say $\bfx \in \mathbb{R}^p$, is any scalar measure of its centrality with respect to a data cloud $\bfX$ (or equivalently the underlying distribution $F$)\cite{ZuoSerfling00c}, and is denoted by $D(\bfx, \bfX)$ (or $D(\bfx, F)$). Assuming that $F$ is elliptic, we can define multivariate rank vectors using data depth:
 
-The clustering method we use is a variant of K-Means clustering where
-the cluster center is defined to be Thiel-Sen fit to the set of points
-in the cluster and distance between a storm cell at $(x,y,t)$
-and the cluster is
-defined to be the Euclidean distance between the storm cell location and the
-Theil-Sen estimate at that time.
+%\begin{equation}
+%\tilde \bfx = \tilde D(\bfx, \bfX).\frac{\bfx - \bfmu}{\| \bfx - \bfmu \|}
+%\end{equation}
+%where $\tilde D(\bfx, \bfX) = \max_{\bfx \in \mathbb R^p} D(\bfx, \bfX) - D(\bfx, \bfX)$. The transformation from original data to these rank vectors keeps population eigenvectors constant, and doing PCA on the rank vectors yields robust estimates of these eigenvectors with fairly good efficiency \cite{Majumdar15}.
 
-\begin{figure}
+\subsection{Data depth-based model selection}
+The depth of a point $\bfx \in \mathbb{R}^p$, is any scalar measure of its centrality with respect to a data cloud $\bfX$ (or equivalently the underlying distribution $F$\cite{ZuoSerfling00c}, and is denoted by $D(\bfx, \bfX)$ (or $D(\bfx, F)$). Consider now a regression setup where estimates of a coefficient vector $\bfbeta$, based on a sample of size $n$, follow sampling distributions that can be asymptotically approximated by elliptic distributions $F_n$ centered at $\bfbeta$ that approach unit mass at $\bfbeta$ as $n \rightarrow \infty$. In this context, we define a model selection criterion for any candidate model, specified by $\alpha$, the set of indices where $\bfbeta$ takes non-zero values:
+
+\begin{equation}\label{eqn:CnEqn}
+C_n(\alpha) = \mathbb E \left[ D \left( \tilde \bfbeta_\alpha, F_n \right) \right]
+\end{equation}
+Here $\tilde \bfbeta_\alpha$ is the estimate of $\bfbeta_\alpha$ obtained from data concatenated with 0 at indices not in $\alpha$, and $D$ is any depth function. When $\alpha$ does not contain all non-zero indices in the true model, we have $C_n(\alpha) \rightarrow 0$ as $n \rightarrow \infty$\cite{MajumdarMS}. Otherwise for any $n$, the criterion maximizes at the smallest correct model, say $\alpha_0$, and decreases monotonically as zero indices are added to $\alpha_0$ one-by-one. In a sample setup, the unknown distribution $F_n$ and the expectation in \ref{eqn:CnEqn} are estimated by bootstrap.
+
+\begin{figure*}
+\captionsetup{justification=centering, font=footnotesize}
 \begin{center}
-\epsfxsize=0.95\hsize \epsfbox{trackstats.png} 
+\subfigure[]{\epsfxsize=0.3\linewidth \epsfbox{rolling_predMSE_full_vs_reduced}}
+\subfigure[]{\epsfxsize=0.3\linewidth \epsfbox{rolling_density2012_full_vs_reduced}}
+\subfigure[]{\epsfxsize=0.3\linewidth \epsfbox{rolling_map2012_full_vs_reduced}}
+\caption{(a) Comparison of MSE for full and reduced model predictions across years, (b) Density plot for actual log rainfall and predictions in year 2012, (c) Station-wise reduced model residuals for 2012}
+\label{fig:prepost}
 \end{center}
-\caption{Effect of clustering storm tracks at different scales.}
-\label{trackstats.fig}
-\end{figure}
+\end{figure*}
 
-The clustering method is as follows:
+For large enough $n$, we can obtain the most parsimonious correct model from true $C_n$ values of only $p+1$ models where $p$ is the dimension of $\bfbeta$.  We use the following scheme:
 \begin{enumerate}
-\item Find an initial estimate of tracks in the dataset. This can
-be obtained from any robust storm tracking algorithm, even a real-time
-one such as that of~\cite{scit,titan,stormattr}.
-\item Treating each track (set of storm cells with the same id) as
-a cluster, compute the Theil-Sen slope and constants ($u,v,x_0,y_0,t_0$)
-for each cluster.
-\item For every storm cell in the dataset, find the nearest cluster.
-If the nearest cluster is different from the cluster the cell is
-currently part of, and if the distance is less than some reasonable
-threshold $D$, move the storm cell to the nearest cluster.
-\item Compute the Theil-Sen fit for each cluster, prune the set of
-clusters to remove substantially identical trajectories and carry out Step 3,
-repeating steps 3 and 4
-until there are no more changes or until the number of iterations
-reaches some maximum (we used 3 iterations as this maximum number).
+\item Calculate $C_n$ for full model;
+\item Drop a predictor, calculate $C_n$ for the reduced model;
+\item Repeat for all $p$ predictors;
+\item Collect predictors dropping which causes $C_n$ to decrease. These are the predictors in the smallest correct model.
 \end{enumerate}
 
-\section{Evaluation}
-Following~\cite{scoretrack}, we carried out a statistical analysis of
-the set of storm tracks extracted from the radar data of June 17, 2012.
-At the most detailed (200 $km^2$)
-scale, the number of trajectories is cut by about
-a third as a result of postanalysis (See Figure~\ref{trackstats.fig}).
-The error in size fit (computed by
-fitting the sizes of the storm cells within a trajectory to a
-``growth-and-decay'' parabola
-and looking for deviations from that fit -- see~\cite{scoretrack} for
-details), an indicator
-of how likely it is that two separate tracks are wrongly combined,
-increases by a very small amount. The position error, an indicator
-of how likely it is that storm cells are added to tracks they are not
-part of, also increases but remains limited to be below the 0.1 decimal
-degree limit imposed by $D$. The fourth panel of Figure~\ref{trackstats.fig}
-demonstrates the benefit of postanalysis -- the mean duration of the
-tracks increases by about 50\%, from an average of about 2000 seconds
-to an average of over 3000 seconds. At the moderate (600 $km^2$ scale)
-and coarse (1000 $km^2$ scale), the behavior is similar.
-For a very small cost in terms of potentially wrong associations, one gets
-a significant improvement in the form of longer-lived tracks.
+\subsection{Linear Mixed Models}
+Linear mixed models add an extra layer of complexity above the standard linear model setup by assuming latent unobservable random effects. We define this model as:
 
-\section*{Acknowledgments}
-Funding for the authors was provided by NOAA/Office of Oceanic and Atmospheric Research under NOAA-OU Cooperative Agreement NA11OAR4320072, U.S. Department of Commerce.
+\begin{equation}\label{eqn:mixedmodel}
+\bfY = X \bfbeta + Z \bfgamma + \epsilon
+\end{equation}
+where $\bfY_{n\times 1}$ is the vector of responses, $X_{n \times p}$ is the matrix of predictors and $\bfbeta_{p\times 1}$ is the vector of coefficients, which are referred as \textit{fixed effects} here. The latent layer comes in the form of the \textit{random effect} vector $\bfgamma_{k\times 1}$ ($k < n$), and the random effects design matrix $Z_{n \times k}$. The vector $\bfgamma$ is modeled as a random draw from $\mathcal{N}_k ({\bf 0}, \Sigma)$, with $\Sigma_{k \times k}$ being positive definite.
+
+\section{Data and implementation}
+
+We use data from 36 weather stations across India for 1978-2012 to model daily median rainfall at a station within a year. In addition to station-specific variables of latitude, longitude, and elevation, we use yearly medians of local variables including maximum and minimum temperature, tropospheric temperature difference ($\Delta TT$), $u$- and $v$- winds at 200, 600 and 850 mb, Ni\~{n}o 3.4 anomaly and Indian Dipole Mode Index (DMI), as well as of global variables that have known connections with the Indian monsoon pattern.  These include 10 indices of the Madden-Julian Oscillation (MJO), 9 northern hemisphere teleconnection indices, solar flux levels, and land-ocean Temperature Anomaly (TA).
+
+We implement the model in \ref{eqn:mixedmodel} taking all the variables mentioned above as fixed effects, and year as a single random effect (i.e. $k=1$). We use separate wild bootstraps on estimated random effects and residuals to obtain resampled observations. Among 35 predictors considered, 21 are selected by our procedure- all of which have been proposed in literature. TA seems to have a large influence.  We also note several MJO indices are selected when starting from a full model with everything but TA, but are dropped in favor of TA when it is included in the full model.
+
+We use a 25 year rolling validation scheme to compare prediction performances of full and reduced models. For each of the years 2003--2012, we use the past 25 year's data as training data. Figure \ref{fig:prepost} summarizes some of the results. Predictions from the reduced model are generally more stable across testing years (less MSE in panel (a)) than those from full model. Also, as demonstrated by panels (b) and (c) for year 2012, the reduced model provides a less biased estimate of the true values.  We observe this reduction in bias for all 10 testing years.
+
+Future work includes investigating spatio-temporal dependencies, detailed studies into algorithmic efficiency issues and further development of theoretical properties of the proposed model selection tool.
+
+%\section*{Acknowledgments}
+%This work is partially supported by the NSF grant IIS-1029711.
 
 \bibliographystyle{ieeetr}
-\bibliography{bibfile,benherzog}
+\bibliography{climate}
 
 \end{document}
