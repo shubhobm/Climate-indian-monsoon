@@ -47,6 +47,7 @@ sdr = nr^(.05)
 loopfun = function(i){
   require(lme4)
   require(fda.usc)
+  set.seed(i)
   
   iyb = fixed + (Z %*% (rnorm(nr)*sdr*eta) + rnorm(n)*sdn*r)/sqrt(1 - p/n)
     
@@ -130,7 +131,6 @@ anova(mod.final, mod.full)
 
 # out-of-sample prediction
 set.seed(07222015)
-
 pred.mat = matrix(0,1e2,2)
 system.time(for(i in 1:1e2){
 test = sample(1:n, ceiling(.1*n), replace=F)
@@ -151,7 +151,8 @@ apply(pred.mat, 2, sd)
 # future prediction
 testyrs = 2003:2012
 ntest = length(testyrs)
-pred.mat = matrix(0, ncol=2, nrow=ntest)
+pred.mat.MSE = matrix(0, ncol=2, nrow=ntest)
+pred.mat.bias = pred.mat.MSE
 
 for (i in 1:ntest){
 iyr = testyrs[i]
@@ -167,16 +168,28 @@ mod.final.train = lmer(form.final, data=rainsmall, subset=itrain)
 
 ytest = log(rainsmall$PRCP[itest]+1)
 yhat.full = as.matrix(cbind(1, testX)) %*% as.numeric(fixef(mod.full.train))
-pred.mat[i,1] = mean((ytest - yhat.full)^2)
+diff.full = ytest - yhat.full
+pred.mat.bias[i,1] = mean(diff.full)
+pred.mat.MSE[i,1] = mean(diff.full^2)
 
 yhat.final = as.matrix(cbind(1, testX[,which.final])) %*% as.numeric(fixef(mod.final.train))
-pred.mat[i,2] = mean((ytest - yhat.final)^2)
+diff.final = ytest - yhat.final
+pred.mat.bias[i,2] = mean(diff.final)
+pred.mat.MSE[i,2] = mean(diff.final^2)
 }
 
-plot(pred.mat[,1]~testyrs, type="b", ylim=c(0,ceiling(max(pred.mat[,1]))), lwd=2,
-	xlab="year", ylab="MSE of BLUE", main="25 year rolling prediction of next year's median rainfall")
-lines(pred.mat[,2]~testyrs, type="b", lty=2, lwd=2)
+par(mfrow=c(1,2))
+plot(pred.mat.MSE[,1]~testyrs, type="b", ylim=c(0,ceiling(max(pred.mat[,1]))), lwd=2,
+	xlab="year", ylab="MSE", main="25 year rolling prediction of next year's median rainfall")
+lines(pred.mat.MSE[,2]~testyrs, type="b", lty=2, lwd=2)
 legend("topleft", c("Full model", "Reduced model"), lty=1:2, lwd=2)
+
+plot(pred.mat.bias[,1]~testyrs, type="b", ylim=c(-3,3), lwd=2,
+	xlab="year", ylab="Bias", main="25 year rolling prediction of next year's median rainfall")
+lines(pred.mat.bias[,2]~testyrs, type="b", lty=2, lwd=2)
+abline(h=0, lty=2)
+legend("topleft", c("Full model", "Reduced model"), lty=1:2, lwd=2)
+par(mfrow=c(1,1))
 
 plot(density(ytest), xlim=c(-2,10), ylim=c(0,.5), lwd=2,
 	xlab="log(PRCP+1)", ylab="density", main="Year 2012")
@@ -190,9 +203,18 @@ library(maps)
 library(maptools)
 
 r.final = ytest - yhat.final
+q.final = quantile(r.final, c(.05,.25,.75,.95))
+pdf('rolling_map2012_full_vs_pvalreduced.pdf')
+defaultPar = par()
+par(mar=rep(0,4))
 India <- map("world", ylim=c(8,38), xlim=c(68,98))
 title("2012")
-points(long.list, lat.list, pch=ifelse(r.final<0, 17, 19),
-	cex=ifelse(abs(r.final)<.5, 1, ifelse(abs(r.final)<1, 2, 2.5)),
-	col=ifelse(r.final>0, "red", "black"))
-legend('topright', c("Positive resid", "negative resid"), pch=c(19,17), col=c("black", "red"))
+points(long.list, lat.list, pch=ifelse(r.final<0, 19, 17),
+	cex=ifelse(r.final < q.final[1] | r.final > q.final[4], 2,
+		ifelse(r.final < q.final[2] | r.final > q.final[3], 1, 0.75)),
+	col=ifelse(r.final<0, "black", "red"))
+legend('topright', c("Positive resid", "negative resid"),
+	pch=c(17,19), col=c("red", "black"), bty="n")
+par(defaultPar)
+dev.off()
+
