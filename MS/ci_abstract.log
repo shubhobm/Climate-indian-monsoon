@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.7.20)  1 AUG 2015 03:41
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.7.20)  6 SEP 2015 18:53
 entering extended mode
 **ci_abstract.tex
 ("C:\Study\My projects\Climate-indian monsoon\MS\ci_abstract.tex"
@@ -537,13 +537,13 @@ Package rerunfilecheck Info: File `ci_abstract.out' has not changed.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 96.
  ) 
 Here is how much of TeX's memory you used:
- 8224 strings out of 493921
- 125299 string characters out of 3148084
- 214344 words of memory out of 3000000
- 11394 multiletter control sequences out of 15000+200000
+ 8226 strings out of 493921
+ 125322 string characters out of 3148084
+ 215344 words of memory out of 3000000
+ 11395 multiletter control sequences out of 15000+200000
  48323 words of font info for 115 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 36i,14n,43p,934b,355s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 36i,14n,43p,838b,355s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Study/LaTeX/MikTeX 2.9/fonts/enc/dvips/fontname/8r.enc}<C:/Study/LaTeX/Mi
 kTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Study/LaTeX/MikTeX 2.9/f
 onts/type1/public/amsfonts/cm/cmex10.pfb><C:/Study/LaTeX/MikTeX 2.9/fonts/type1
@@ -558,9 +558,9 @@ ype1/public/amsfonts/cm/cmsy8.pfb><C:/Study/LaTeX/MikTeX 2.9/fonts/type1/public
 tmb8a.pfb><C:/Study/LaTeX/MikTeX 2.9/fonts/type1/urw/times/utmbi8a.pfb><C:/Stud
 y/LaTeX/MikTeX 2.9/fonts/type1/urw/times/utmr8a.pfb><C:/Study/LaTeX/MikTeX 2.9/
 fonts/type1/urw/times/utmri8a.pfb>
-Output written on ci_abstract.pdf (2 pages, 590289 bytes).
+Output written on ci_abstract.pdf (2 pages, 590159 bytes).
 PDF statistics:
- 141 PDF objects out of 1000 (max. 8388607)
- 23 named destinations out of 1000 (max. 500000)
+ 143 PDF objects out of 1000 (max. 8388607)
+ 24 named destinations out of 1000 (max. 500000)
  69 words of extra memory for PDF output out of 10000 (max. 10000000)
 

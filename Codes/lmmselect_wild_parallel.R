@@ -28,7 +28,8 @@ r.squaredGLMM(mod.full)
 
 # set up residuals
 y = getME(mod.full, 'y')
-fixed = getME(mod.full, 'X') %*% fixef(mod.full)
+x = getME(mod.full, 'X')
+fixed = x %*% fixef(mod.full)
 eta = unlist(ranef(mod.full))
 Z = t(as.matrix(getME(mod.full,'Zt')))
 random = Z %*% eta

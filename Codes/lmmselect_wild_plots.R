@@ -13,7 +13,7 @@ library(doSNOW)
 library(parallel)
 
 # read in data
-rainsmall = read.csv("rainsmall.txt")
+rainsmall = read.csv("../data/rainsmall.csv")
 long.list = rainsmall$LONGITUDE[1:36]
 lat.list = rainsmall$LATITUDE[1:36]
 
@@ -40,8 +40,8 @@ r = y - fixed - random
 n = nrow(rainsmall)
 nr = length(eta)
 p = ncol(rainsmall)-3
-sdn = n^(.05)
-sdr = nr^(.05)
+sdn = n^(.1)
+sdr = nr^(.1)
 
 ## loop to get drop 1 bootstrap estimates
 loopfun = function(i){
@@ -65,7 +65,7 @@ loopfun = function(i){
 		ibeta.j.full[-j] = ibeta.j
 
     # get depth-based criterion
-		SSPvec[j] = mdepth.RP(ibeta.j.full, beta.mat)$dep
+		SSPvec[j] = mdepth.TD(as.matrix(ibeta.j.full), beta.mat)$dep
   	}
   SSPvec
 }
@@ -90,10 +90,10 @@ for(i in 1:nboot){
   setTxtProgressBar(pb, i)
 }
 close(pb)
-SSPmat.d[,p+1] = mdepth.RP(beta.mat, beta.mat)$dep
+SSPmat.d[,p+1] = mdepth.TD(beta.mat, beta.mat)$dep
 
 # run function in parallel
-cl <- makeCluster(detectCores()-2)
+cl <- makeCluster(detectCores()-1)
 registerDoSNOW(cl)
 system.time(SSPtab <- foreach(i=1:nboot) %dopar% loopfun(i))
 SSPmat.d[,1:p] = matrix(unlist(SSPtab), ncol=p, byrow=T)
@@ -120,7 +120,7 @@ pairs(beta.mat[,1:5], pch=19, cex=.2)
 
 # final model
 noneCn = Cn.frame$Cn[which(Cn.frame$DroppedVar == "<none>")]
-which.final = which(apply(SSPmat.d, 2, mean) < noneCn & pVal < 0.05)
+which.final = which(apply(SSPmat.d, 2, mean) < noneCn)
 fixed.final = paste(varnames[which.final], collapse="+")
 form.final = as.formula(paste("log(PRCP+1) ~", fixed.final, random_terms))
 mod.final = lmer(form.final, data=rainsmall)
@@ -178,25 +178,29 @@ pred.mat.bias[i,2] = mean(diff.final)
 pred.mat.MSE[i,2] = mean(diff.final^2)
 }
 
-par(mfrow=c(1,2))
-plot(pred.mat.MSE[,1]~testyrs, type="b", ylim=c(0,ceiling(max(pred.mat[,1]))), lwd=2,
-	xlab="year", ylab="MSE", main="25 year rolling prediction of next year's median rainfall")
+pdf('rolling_predMSE_full_vs_reduced.pdf',5,5)
+plot(pred.mat.MSE[,1]~testyrs, type="b", ylim=c(0,ceiling(max(pred.mat.MSE[,1]))), lwd=2,
+	xlab="year", ylab="MSE")
 lines(pred.mat.MSE[,2]~testyrs, type="b", lty=2, lwd=2)
 legend("topleft", c("Full model", "Reduced model"), lty=1:2, lwd=2)
+dev.off()
 
+pdf('rolling_predbias_full_vs_reduced.pdf',5,5)
 plot(pred.mat.bias[,1]~testyrs, type="b", ylim=c(-3,3), lwd=2,
-	xlab="year", ylab="Bias", main="25 year rolling prediction of next year's median rainfall")
+	xlab="year", ylab="Bias")
 lines(pred.mat.bias[,2]~testyrs, type="b", lty=2, lwd=2)
 abline(h=0, lty=2)
 legend("topleft", c("Full model", "Reduced model"), lty=1:2, lwd=2)
-par(mfrow=c(1,1))
+dev.off()
 
+pdf('rolling_density2012_full_vs_reduced.pdf',5,5)
 plot(density(ytest), xlim=c(-2,10), ylim=c(0,.5), lwd=2,
 	xlab="log(PRCP+1)", ylab="density", main="Year 2012")
 lines(density(yhat.full), col='red', lwd=2)
 lines(density(yhat.final), col='blue', lwd=2)
 legend("topright", c("Truth", "Full model pred", "Reduced model pred"),
 	col=c('black','red','blue'), lty=1, lwd=2)
+dev.off()
 
 # plot on map
 library(maps)
@@ -204,7 +208,7 @@ library(maptools)
 
 r.final = ytest - yhat.final
 q.final = quantile(r.final, c(.05,.25,.75,.95))
-pdf('rolling_map2012_full_vs_pvalreduced.pdf')
+pdf('rolling_map2012_full_vs_reduced.pdf',5,5)
 defaultPar = par()
 par(mar=rep(0,4))
 India <- map("world", ylim=c(8,38), xlim=c(68,98))

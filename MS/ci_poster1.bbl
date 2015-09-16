@@ -1,0 +1,24 @@
+\begin{thebibliography}{3}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Majumdar and Chatterjee(2015+)]{MajumdarMS}
+S.~Majumdar and S.~Chatterjee.
+\newblock A model selection criterion for regression estimators based on data
+  depth.
+\newblock Working paper, 2015+.
+
+\bibitem[Mammen(1993)]{Mammen93}
+E.~Mammen.
+\newblock Bootstrap and wild bootstrap for high dimensional linear models.
+\newblock \emph{Ann. Statist.}, 21-1:\penalty0 255--285, 1993.
+
+\bibitem[Zuo and Serfling(2000)]{ZuoSerfling00c}
+Y.~Zuo and R.~Serfling.
+\newblock General notions of statistical depth function.
+\newblock \emph{Ann. Statist.}, 28-2:\penalty0 461--482, 2000.
+
+\end{thebibliography}
