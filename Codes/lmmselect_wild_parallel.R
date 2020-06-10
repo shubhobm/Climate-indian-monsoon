@@ -100,7 +100,7 @@ stopCluster(cl)
 # get p-values
 pVal = rep(1, p+1)
 for(i in 1:p){
-  pVal[i] = t.test(SSPmat.d[,i], SSPmat.d[,p+1])$p.value
+  pVal[i] = t.test(SSPmat.d[,i], SSPmat.d[,i+1], paired=TRUE)$p.value
 }
 
 Cn.frame = data.frame(DroppedVar = c(paste("-", names(data.frame(x))[-1]), "<none>"),
@@ -109,7 +109,6 @@ Cn.frame = data.frame(DroppedVar = c(paste("-", names(data.frame(x))[-1]), "<non
 Cn.frame = Cn.frame[with(Cn.frame, order(Cn)),]
 row.names(Cn.frame) = NULL
 Cn.frame
-
 
 write.table(Cn.frame, 'wild_ntothepoint1.txt')
 

@@ -163,8 +163,8 @@ testX = rainsmall[itest,-c(1:3)]
 #mod.full.train = lm(as.formula(paste("log(PRCP+1) ~", fixed.full)), data=rainsmall, subset=itrain)
 #mod.final.train = lm(as.formula(paste("log(PRCP+1) ~", fixed.final)), data=rainsmall, subset=itrain)
 
-mod.full.train = lmer(form.full, data=rainsmall, subset=itrain)
-mod.final.train = lmer(form.final, data=rainsmall, subset=itrain)
+mod.full.train = update(mod.full, subset=itrain)
+mod.final.train = update(mod.final, subset=itrain)
 
 ytest = log(rainsmall$PRCP[itest]+1)
 yhat.full = as.matrix(cbind(1, testX)) %*% as.numeric(fixef(mod.full.train))
